@@ -4,19 +4,28 @@ type Query {
 }
 
 type Mutation {
-  signUp(authData:SignUpInput!): User
-  signIn(email: String!,password:String!): User
+  signUp(authData:SignUpInput!): AuthData!
+  signIn(authData:SignInInput!): AuthData!
   signOut(email: String!,password:String!): User
 }
 
 type User {
   username: String!
   email: String!
-  password: String!
+}
+
+type AuthData {
+  user: User!,
+  token: String!
 }
 
 input SignUpInput {
-username: String!,
+ username: String!,
+ email: String!,
+ password:String!
+}
+
+input SignInInput { 
  email: String!,
  password:String!
 }

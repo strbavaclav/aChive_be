@@ -31,12 +31,18 @@ export type Scalars = {
   Float: { input: number; output: number };
 };
 
+export type AuthData = {
+  __typename?: "AuthData";
+  token: Scalars["String"]["output"];
+  user: User;
+};
+
 export type Mutation = {
   __typename?: "Mutation";
   _empty?: Maybe<Scalars["String"]["output"]>;
-  signIn?: Maybe<User>;
+  signIn: AuthData;
   signOut?: Maybe<User>;
-  signUp?: Maybe<User>;
+  signUp: AuthData;
 };
 
 export type Mutation_EmptyArgs = {
@@ -44,8 +50,7 @@ export type Mutation_EmptyArgs = {
 };
 
 export type MutationSignInArgs = {
-  email: Scalars["String"]["input"];
-  password: Scalars["String"]["input"];
+  authData: SignInInput;
 };
 
 export type MutationSignOutArgs = {
@@ -68,6 +73,11 @@ export type QueryGetUserArgs = {
   id: Scalars["ID"]["input"];
 };
 
+export type SignInInput = {
+  email: Scalars["String"]["input"];
+  password: Scalars["String"]["input"];
+};
+
 export type SignUpInput = {
   email: Scalars["String"]["input"];
   password: Scalars["String"]["input"];
@@ -77,7 +87,6 @@ export type SignUpInput = {
 export type User = {
   __typename?: "User";
   email: Scalars["String"]["output"];
-  password: Scalars["String"]["output"];
   username: Scalars["String"]["output"];
 };
 
@@ -188,10 +197,12 @@ export type DirectiveResolverFn<
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AuthData: ResolverTypeWrapper<AuthData>;
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
+  SignInInput: SignInInput;
   SignUpInput: SignUpInput;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
   User: ResolverTypeWrapper<User>;
@@ -199,13 +210,24 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AuthData: AuthData;
   Boolean: Scalars["Boolean"]["output"];
   ID: Scalars["ID"]["output"];
   Mutation: {};
   Query: {};
+  SignInInput: SignInInput;
   SignUpInput: SignUpInput;
   String: Scalars["String"]["output"];
   User: User;
+};
+
+export type AuthDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AuthData"] = ResolversParentTypes["AuthData"]
+> = {
+  token?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  user?: Resolver<ResolversTypes["User"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type MutationResolvers<
@@ -219,10 +241,10 @@ export type MutationResolvers<
     Partial<Mutation_EmptyArgs>
   >;
   signIn?: Resolver<
-    Maybe<ResolversTypes["User"]>,
+    ResolversTypes["AuthData"],
     ParentType,
     ContextType,
-    RequireFields<MutationSignInArgs, "email" | "password">
+    RequireFields<MutationSignInArgs, "authData">
   >;
   signOut?: Resolver<
     Maybe<ResolversTypes["User"]>,
@@ -231,7 +253,7 @@ export type MutationResolvers<
     RequireFields<MutationSignOutArgs, "email" | "password">
   >;
   signUp?: Resolver<
-    Maybe<ResolversTypes["User"]>,
+    ResolversTypes["AuthData"],
     ParentType,
     ContextType,
     RequireFields<MutationSignUpArgs, "authData">
@@ -261,12 +283,12 @@ export type UserResolvers<
   ParentType extends ResolversParentTypes["User"] = ResolversParentTypes["User"]
 > = {
   email?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  password?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   username?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {
+  AuthData?: AuthDataResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
