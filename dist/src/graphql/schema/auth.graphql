@@ -1,0 +1,23 @@
+type Query {
+  getUser(id: ID!): User
+  getAllUsers: [User]
+}
+
+type Mutation {
+  signUp(authData:SignUpInput!): User
+  signIn(email: String!,password:String!): User
+  signOut(email: String!,password:String!): User
+}
+
+type User {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input SignUpInput {
+username: String!,
+ email: String!,
+ password:String!
+}
+

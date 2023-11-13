@@ -1,43 +1,59 @@
+import { ApolloServer } from "@apollo/server";
 import express from "express";
-import morgan from "morgan";
-import bodyParser from "body-parser";
-import jwt from "jsonwebtoken";
+import http from "http";
 import cors from "cors";
 import "dotenv/config";
-import { client } from "./database/database.config.js";
-import authRoutes from "./routes/auth.route.js";
+import { client } from "./database/database.config";
 import mongoose from "mongoose";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { expressMiddleware } from "@apollo/server/express4";
+import schemaDefinition from "./graphql/rootTypeDefs";
+import rootResolver from "./graphql/rootResolver";
 
-const app = express();
-
-mongoose.connect(process.env.MONGODB_URI!!);
-
-async function run() {
-  try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-    await client.close();
-  }
+interface MyContext {
+  token?: String;
 }
-run().catch(console.dir);
 
-app.use(express.json());
-app.use(morgan("dev"));
-app.use(bodyParser.json());
-app.use(cors());
+const init = async () => {
+  const app = express();
+  const httpServer = http.createServer(app);
+  const server = new ApolloServer<MyContext>({
+    typeDefs: [schemaDefinition],
+    resolvers: rootResolver,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
 
-app.use("/api/auth", authRoutes);
+  await server.start();
 
-app.use((req, res) => {
-  res.status(404).json("404 - endpoint do not exits!");
-});
+  mongoose.connect(process.env.MONGODB_URI!!);
 
-const port = process.env.PORT || 8000;
+  async function run() {
+    try {
+      await client.connect();
+      await client.db("admin").command({ ping: 1 });
+      console.log(
+        "Pinged your deployment. You successfully connected to MongoDB!"
+      );
+    } finally {
+      await client.close();
+    }
+  }
+  run().catch(console.dir);
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port} 🚀`);
-});
+  app.use(
+    "/graphql",
+    cors<cors.CorsRequest>(),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => ({ token: req.headers.token }),
+    })
+  );
+
+  app.use((req, res) => {
+    res.status(404).json("404 - endpoint do not exits!");
+  });
+
+  await httpServer.listen({ port: 4000 });
+  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+};
+init();
